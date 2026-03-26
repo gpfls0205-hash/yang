@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>티칭허브 — 스마트 학습</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f5f7;
+  --card:#ffffff;
+  --ink:#1d1d1f;
+  --ink2:#86868b;
+  --accent:#2563eb;
+  --accent-soft:#eff6ff;
+  --accent-hover:#1d4ed8;
+  --navy:#1a233a;
+  --mint:#34c759;
+  --mint-soft:#d1fae5;
+  --red:#ff3b30;
+  --red-soft:#fee2e2;
+  --border:#d2d2d7;
+  --border-light:#e8e8ed;
+  --surface:#f5f5f7;
+  --radius:16px;
+  --radius-sm:12px;
+  --shadow:0 2px 12px rgba(0,0,0,0.04),0 0 0 1px rgba(0,0,0,0.03);
+  --shadow-hover:0 8px 30px rgba(0,0,0,0.08),0 0 0 1px rgba(0,0,0,0.04);
+  --font-kr:'Pretendard',sans-serif;
+  --font-en:'Outfit',sans-serif;
+}
+html{scroll-behavior:smooth}
+body{font-family:var(--font-kr);background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden}
+
+/* ─── Topbar ─── */
+.topbar{
+  position:sticky;top:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 28px;
+  background:rgba(255,255,255,0.72);
+  backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid var(--border-light);
+}
+.topbar-logo{font-family:var(--font-en);font-weight:900;font-size:19px;letter-spacing:-0.5px;display:flex;align-items:center;gap:8px;color:var(--navy)}
+.topbar-logo .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block}
+.topbar-pill{
+  padding:7px 16px;border-radius:100px;font-size:13px;font-weight:600;
+  border:1px solid var(--border);background:transparent;color:var(--ink2);
+  cursor:pointer;transition:all .2s;font-family:var(--font-kr);
+}
+.topbar-pill:hover{background:var(--ink);color:#fff;border-color:var(--ink)}
+
+/* ─── Layout ─── */
+.page{max-width:680px;margin:0 auto;padding:36px 20px 100px}
+
+/* ─── Animations ─── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.anim-in{animation:fadeUp .45s ease}
+
+/* ─── Setup View ─── */
+.hero{text-align:center;margin-bottom:44px}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 13px;border-radius:100px;
+  background:var(--navy);color:#fff;
+  font-size:11px;font-weight:700;letter-spacing:0.8px;
+  margin-bottom:14px;font-family:var(--font-en);text-transform:uppercase;
+}
+.hero h1{font-size:clamp(26px,5vw,36px);font-weight:800;line-height:1.35;letter-spacing:-0.8px;margin-bottom:10px;color:var(--navy)}
+.hero p{font-size:15px;color:var(--ink2);line-height:1.6}
+
+/* Mode Selector */
+.mode-selector{display:flex;gap:10px;margin-bottom:36px}
+.mode-btn{
+  flex:1;position:relative;
+  padding:24px 14px 20px;border-radius:var(--radius);
+  border:1.5px solid var(--border-light);background:var(--card);
+  cursor:pointer;transition:all .25s ease;
+  text-align:center;
+}
+.mode-btn:hover{border-color:var(--border);box-shadow:var(--shadow-hover);transform:translateY(-2px)}
+.mode-btn.active{border-color:var(--accent);background:var(--accent-soft)}
+.mode-btn.active .mode-btn-dot{background:var(--accent)}
+.mode-btn-dot{
+  position:absolute;top:10px;right:10px;
+  width:7px;height:7px;border-radius:50%;background:var(--border);transition:.25s;
+}
+.mode-btn-icon{font-size:28px;display:block;margin-bottom:8px}
+.mode-btn-label{font-size:14px;font-weight:700;color:var(--ink)}
+.mode-btn-sub{font-size:11px;color:var(--ink2);margin-top:3px;font-weight:500}
+
+/* Section Labels */
+.section-label{
+  font-family:var(--font-en);font-size:11px;font-weight:700;
+  letter-spacing:1.2px;color:var(--accent);margin-bottom:8px;
+  text-transform:uppercase;
+}
+.section-heading{font-size:18px;font-weight:700;margin-bottom:16px;letter-spacing:-0.3px}
+
+/* Inputs */
+.field-input{
+  width:100%;padding:14px 18px;border-radius:var(--radius-sm);
+  border:1px solid var(--border-light);background:var(--card);
+  font-size:15px;font-family:var(--font-kr);color:var(--ink);
+  transition:all .2s;outline:none;
+}
+.field-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+.field-input::placeholder{color:var(--border)}
+
+.field-textarea{
+  width:100%;height:170px;padding:16px 18px;border-radius:var(--radius);
+  border:1px solid var(--border-light);background:var(--card);
+  font-size:13px;font-family:var(--font-kr);color:var(--ink);
+  line-height:1.8;resize:none;transition:all .2s;outline:none;
+}
+.field-textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(37,99,235,0.1)}
+.field-textarea::placeholder{color:var(--border)}
+
+/* Buttons */
+.btn-primary{
+  width:100%;padding:18px;border:none;border-radius:var(--radius-sm);
+  background:var(--accent);color:#fff;
+  font-size:15px;font-weight:700;font-family:var(--font-kr);
+  cursor:pointer;transition:all .2s;
+}
+.btn-primary:hover{background:var(--accent-hover);transform:translateY(-1px);box-shadow:0 4px 16px rgba(37,99,235,0.25)}
+.btn-primary:active{transform:scale(0.985)}
+
+.btn-outline{
+  padding:8px 16px;border-radius:100px;
+  border:1px solid var(--border);background:transparent;
+  font-size:12px;font-weight:600;font-family:var(--font-kr);color:var(--ink2);
+  cursor:pointer;transition:all .2s;
+}
+.btn-outline:hover{background:var(--surface);border-color:var(--border)}
+
+.upload-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.upload-hint{font-size:12px;color:var(--ink2)}
+
+/* ─── Voca View ─── */
+#voca-view{display:none}
+.voca-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.voca-title{font-size:20px;font-weight:800;letter-spacing:-0.5px;color:var(--navy)}
+.voca-counter{
+  font-family:var(--font-en);font-weight:700;font-size:13px;
+  color:var(--accent);background:var(--accent-soft);padding:5px 13px;border-radius:100px;
+}
+.progress-track{width:100%;height:4px;background:var(--border-light);border-radius:100px;margin-bottom:24px;overflow:hidden}
+.progress-fill{height:100%;background:var(--accent);border-radius:100px;transition:width .4s cubic-bezier(.4,0,.2,1);width:0}
+
+.card-scene{width:100%;height:320px;perspective:1200px;margin-bottom:24px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.card-body{
+  width:100%;height:100%;position:relative;
+  transition:transform .65s cubic-bezier(.175,.885,.32,1.275);
+  transform-style:preserve-3d;
+}
+.card-body.flipped{transform:rotateX(180deg)}
+.card-face{
+  position:absolute;inset:0;backface-visibility:hidden;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  border-radius:20px;padding:36px;text-align:center;
+}
+.card-front{background:var(--card);border:1.5px solid var(--border-light);box-shadow:var(--shadow)}
+.card-back{background:var(--navy);color:#fff;transform:rotateX(180deg);box-shadow:0 12px 40px rgba(26,35,58,0.2)}
+.card-tag{font-family:var(--font-en);font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;opacity:0.35;margin-bottom:16px}
+.card-term{font-size:clamp(26px,6vw,38px);font-weight:900;letter-spacing:-0.8px;line-height:1.2;margin-bottom:14px;color:var(--navy)}
+.card-back .card-term{color:#fff}
+.card-hint{font-size:12px;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:4px}
+.card-def{font-size:17px;line-height:1.7;font-weight:500;opacity:0.9}
+
+.voca-nav{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.voca-nav-btn{
+  padding:16px;border:1.5px solid var(--border-light);border-radius:var(--radius-sm);
+  background:var(--card);font-size:14px;font-weight:700;
+  font-family:var(--font-kr);color:var(--ink);cursor:pointer;transition:all .2s;
+}
+.voca-nav-btn:hover{border-color:var(--accent);color:var(--accent)}
+.voca-nav-btn.next{background:var(--accent);color:#fff;border-color:var(--accent)}
+.voca-nav-btn.next:hover{background:var(--accent-hover)}
+
+.key-hint{text-align:center;margin-top:14px;font-size:11px;color:var(--ink2)}
+.key-hint kbd{
+  display:inline-block;padding:2px 7px;border-radius:5px;
+  background:var(--card);font-family:var(--font-en);font-size:10px;font-weight:600;
+  border:1px solid var(--border);margin:0 2px;color:var(--ink2);
+}
+
+/* ─── Quiz View ─── */
+#quiz-view{display:none}
+.quiz-head{text-align:center;margin-bottom:32px;padding-bottom:20px;border-bottom:1.5px solid var(--border-light)}
+.quiz-head h2{font-size:22px;font-weight:800;letter-spacing:-0.5px;color:var(--navy)}
+.quiz-head p{font-size:13px;color:var(--ink2);margin-top:6px}
+
+.q-block{
+  background:var(--card);border-radius:var(--radius);
+  padding:26px;margin-bottom:16px;
+  border:1px solid var(--border-light);transition:all .25s;
+}
+.q-num{font-family:var(--font-en);font-size:12px;font-weight:700;color:var(--accent);letter-spacing:0.3px;margin-bottom:8px}
+.q-text{font-size:16px;font-weight:700;line-height:1.6;margin-bottom:18px}
+
+.q-opt{
+  display:flex;align-items:center;gap:12px;
+  width:100%;text-align:left;padding:14px 16px;
+  border:1px solid var(--border-light);border-radius:var(--radius-sm);
+  margin-bottom:7px;cursor:pointer;
+  background:transparent;font-size:14px;font-family:var(--font-kr);color:var(--ink);
+  transition:all .2s;line-height:1.5;
+}
+.q-opt:hover{border-color:var(--border);background:var(--surface)}
+.q-opt.selected{border-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.q-opt .opt-marker{
+  flex-shrink:0;width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-en);font-size:11px;font-weight:700;
+  background:var(--surface);color:var(--ink2);transition:all .2s;
+}
+.q-opt.selected .opt-marker{background:var(--accent);color:#fff}
+.q-opt.correct{border-color:var(--mint)!important;background:var(--mint-soft)!important}
+.q-opt.correct .opt-marker{background:var(--mint)!important;color:#fff!important}
+.q-opt.wrong{border-color:var(--red)!important;background:var(--red-soft)!important}
+.q-opt.wrong .opt-marker{background:var(--red)!important;color:#fff!important}
+
+.q-explain{
+  display:none;margin-top:14px;padding:14px 16px;
+  background:var(--surface);border-radius:var(--radius-sm);
+  font-size:13px;line-height:1.7;color:var(--ink2);
+}
+.q-explain b{color:var(--ink);font-weight:700}
+
+.btn-grade{
+  width:100%;padding:18px;border:none;border-radius:var(--radius-sm);
+  background:var(--accent);color:#fff;
+  font-size:16px;font-weight:700;font-family:var(--font-kr);
+  cursor:pointer;transition:all .2s;
+  box-shadow:0 4px 16px rgba(37,99,235,0.2);
+}
+.btn-grade:hover{background:var(--accent-hover);transform:translateY(-1px)}
+.btn-grade:active{transform:scale(0.985)}
+.btn-grade:disabled{background:var(--border);box-shadow:none;cursor:default;transform:none}
+
+/* Score Card */
+.score-card{
+  display:none;text-align:center;padding:32px;
+  background:var(--card);border-radius:var(--radius);
+  border:1.5px solid var(--border-light);margin-bottom:20px;
+}
+.score-ring{width:110px;height:110px;margin:0 auto 18px;position:relative}
+.score-ring svg{width:110px;height:110px;transform:rotate(-90deg)}
+.score-ring circle{fill:none;stroke-width:7;stroke-linecap:round}
+.score-ring .ring-bg{stroke:var(--border-light)}
+.score-ring .ring-fill{stroke:var(--accent);transition:stroke-dashoffset 1s ease;stroke-dasharray:314.159;stroke-dashoffset:314.159}
+.score-num{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-family:var(--font-en);font-weight:900;font-size:32px;line-height:1;color:var(--navy);
+}
+.score-num small{font-size:11px;font-weight:600;color:var(--ink2);margin-top:4px}
+.score-msg{font-size:17px;font-weight:800;margin-bottom:4px;color:var(--navy)}
+.score-sub{font-size:13px;color:var(--ink2)}
+
+/* Back button */
+.back-btn{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:8px 0;margin-bottom:18px;
+  background:none;border:none;cursor:pointer;
+  font-size:13px;font-weight:600;color:var(--accent);
+  font-family:var(--font-kr);transition:opacity .2s;
+}
+.back-btn:hover{opacity:0.7}
+
+/* ─── Responsive ─── */
+@media(max-width:600px){
+  .topbar{padding:12px 16px}
+  .page{padding:24px 16px 80px}
+  .mode-selector{flex-direction:column;gap:8px}
+  .mode-btn{padding:18px 16px;flex-direction:row;display:flex;align-items:center;gap:12px;text-align:left}
+  .mode-btn-icon{font-size:24px;margin-bottom:0}
+  .card-scene{height:260px}
+  .card-term{font-size:26px}
+  .q-block{padding:20px}
+  .key-hint{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo"><span class="dot"></span> teaching hub</div>
+  <button class="topbar-pill" onclick="location.reload()">처음으로</button>
+</div>
+
+<div class="page">
+  <!-- ====== SETUP ====== -->
+  <div id="setup-view" class="anim-in">
+    <div class="hero">
+      <div class="hero-badge">Smart Study</div>
+      <h1>오늘 뭐 공부할까?</h1>
+      <p>암기카드로 용어를 외우거나, 모의고사로 실력을 점검하세요.</p>
+    </div>
+
+    <div class="section-label">01 — Mode</div>
+    <div class="section-heading">학습 모드</div>
+    <div class="mode-selector">
+      <div class="mode-btn active" onclick="setMode('quiz',this)">
+        <span class="mode-btn-dot"></span>
+        <span class="mode-btn-icon">✍️</span>
+        <div><span class="mode-btn-label">모의고사</span><div class="mode-btn-sub">문제 풀고 채점까지</div></div>
+      </div>
+      <div class="mode-btn" onclick="setMode('voca',this)">
+        <span class="mode-btn-dot"></span>
+        <span class="mode-btn-icon">🃏</span>
+        <div><span class="mode-btn-label">암기카드</span><div class="mode-btn-sub">카드 뒤집어 암기</div></div>
+      </div>
+      <div class="mode-btn" onclick="loadExamData()">
+        <span class="mode-btn-dot"></span>
+        <span class="mode-btn-icon">⚡</span>
+        <div><span class="mode-btn-label">자료 자동채움</span><div class="mode-btn-sub">샘플 데이터 로드</div></div>
+      </div>
+    </div>
+
+    <div class="section-label">02 — Data</div>
+    <div class="section-heading">학습 데이터</div>
+    <input type="text" id="mainTitle" class="field-input" placeholder="학습지 제목 (예: 생활 자원 관리 핵심 정리)" style="margin-bottom:14px">
+    <div class="upload-row">
+      <span class="upload-hint">탭(Tab) 구분 데이터를 입력하거나 엑셀을 업로드하세요.</span>
+      <label for="excelIn" class="btn-outline" style="cursor:pointer">📎 엑셀 업로드</label>
+      <input type="file" id="excelIn" hidden accept=".xlsx,.xls,.csv" onchange="parseExcel(event)">
+    </div>
+    <textarea id="dataInput" class="field-textarea" placeholder="암기카드 [Tab] 용어 [Tab] 뜻&#10;객관식 [Tab] 문제 [Tab] 보기1 | 보기2 | 보기3 [Tab] 정답번호 [Tab] 해설"></textarea>
+    <button class="btn-primary" onclick="startLearning()" style="margin-top:18px">학습 시작하기 →</button>
+  </div>
+
+  <!-- ====== VOCA ====== -->
+  <div id="voca-view">
+    <button class="back-btn" onclick="goHome()">← 돌아가기</button>
+    <div class="voca-header">
+      <div class="voca-title" id="vocaTitle">단어 암기</div>
+      <div class="voca-counter" id="vocaProgress">1 / 10</div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="vocaBar"></div></div>
+    <div class="card-scene" onclick="flipVoca()">
+      <div class="card-body" id="vocaTarget">
+        <div class="card-face card-front">
+          <div class="card-tag">Term</div>
+          <div class="card-term" id="vocaFrontText">용어</div>
+          <div class="card-hint">↕ 탭해서 뜻 보기</div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-tag">Definition</div>
+          <div class="card-def" id="vocaBackText">설명</div>
+        </div>
+      </div>
+    </div>
+    <div class="voca-nav">
+      <button class="voca-nav-btn" onclick="moveVoca(-1)">← 이전</button>
+      <button class="voca-nav-btn next" onclick="moveVoca(1)">다음 →</button>
+    </div>
+    <div class="key-hint"><kbd>←</kbd> <kbd>→</kbd> 방향키로 이동 · <kbd>Space</kbd> 카드 뒤집기</div>
+  </div>
+
+  <!-- ====== QUIZ ====== -->
+  <div id="quiz-view">
+    <button class="back-btn" onclick="goHome()">← 돌아가기</button>
+    <div class="quiz-head">
+      <h2 id="quizTitle">모의고사</h2>
+      <p id="quizSub">모든 문제를 풀고 제출 버튼을 눌러주세요.</p>
+    </div>
+    <div class="score-card" id="scoreCard">
+      <div class="score-ring">
+        <svg viewBox="0 0 110 110"><circle class="ring-bg" cx="55" cy="55" r="50"/><circle class="ring-fill" id="scoreFill" cx="55" cy="55" r="50"/></svg>
+        <div class="score-num"><span id="scoreText">0</span><small>정답률</small></div>
+      </div>
+      <div class="score-msg" id="scoreMsg">수고했어요!</div>
+      <div class="score-sub" id="scoreSub">아래에서 해설을 확인하세요.</div>
+    </div>
+    <div id="quizContainer"></div>
+    <button class="btn-grade" id="gradeBtn" onclick="processGrading()">제출하고 채점하기 ✓</button>
+  </div>
+</div>
+
+<script>
+let activeMode='quiz',learningSet=[],curVocaIdx=0;
+
+function setMode(m,el){
+  activeMode=m;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+}
+function goHome(){location.reload()}
+
+function loadExamData(){
+  const d=`암기카드	생활 자원	개인과 가족의 목표 달성을 위해 사용되는 모든 인적·물적 수단입니다.
+암기카드	인적 자원	시간, 지식, 기술, 태도 등 사람 내부에 있어 개발할수록 질이 향상되는 자원입니다.
+암기카드	물적 자원	금전, 물건, 시설 등 눈에 보이며 사용하면 양이 줄어드는 유한한 자원입니다.
+암기카드	업사이클링(새활용)	버려지는 물건에 디자인과 가치를 더해 완전히 새로운 제품으로 재탄생시키는 것입니다.
+암기카드	로컬 푸드	장거리 운송 과정을 거치지 않은 지역 농산물로, 신선도가 높고 탄소 배출이 적습니다.
+암기카드	푸드 마일리지	식품이 생산지에서 소비자의 식탁에 오르기까지의 이동 거리로, 짧을수록 환경에 유리합니다.
+암기카드	제로 웨이스트	쓰레기 배출을 '0'에 가깝게 최소화하여 환경 오염을 줄이려는 라이프스타일입니다.
+암기카드	패시브 하우스	첨단 단열 공법을 사용하여 에너지가 밖으로 새 나가는 것을 최대한 막는 집입니다.
+암기카드	액티브 하우스	태양열, 풍력 등 자연 에너지를 이용해 에너지를 스스로 만들어 내는 능동적인 집입니다.
+객관식	생활 자원의 특성에 대한 설명으로 가장 적절하지 않은 것은?	① 목표 달성을 위해 사용 | ② 모든 사람에게 양과 종류가 동일 | ③ 가치는 개인의 상황에 따라 변화	2	사람마다 처한 환경, 능력, 노력 등이 다르기 때문에 소유한 자원의 양과 종류는 개인마다 차이가 있습니다.
+객관식	<보기> 중 '물적 자원'에 해당하는 것만 고른 것은? (ㄱ.시간 ㄴ.금전 ㄷ.지식 ㄹ.옷)	① ㄱ, ㄴ | ② ㄴ, ㄹ | ③ ㄱ, ㄷ	2	금전과 옷은 눈에 보이는 물적 자원이며, 시간과 지식은 사람 내부의 인적 자원입니다.
+객관식	생활 자원의 순환 과정 중 '소비' 단계에서의 친환경적 행동은?	① 재생 에너지 사용 생산 | ② 구매 전 필요성 다시 생각하기 | ③ 분리배출 표시 확인	2	물건을 구매하기 전 꼭 필요한지 고민하는 것은 소비 결정 단계에서의 올바른 태도입니다.
+객관식	다음 중 '윤리적 소비'를 실천하고 있는 사례는?	① 저렴한 패스트 패션 대량 구매 | ② 생산자 인권을 고려한 공정 무역 제품 구매 | ③ 유행하는 옷 매달 새로 사기	2	공정 무역 제품 구매는 생산자의 노동 환경과 인권을 존중하는 대표적인 윤리적 소비 행동입니다.
+객관식	스마트 홈 해킹으로 인한 사생활 노출은 어떤 문제에 해당합니까?	① 디지털 격차 | ② 사생활 침해 및 보안 문제 | ③ 디지털 기기 중독	2	편리함을 위해 연결된 디지털 기기가 해킹될 경우 심각한 사생활 노출과 보안 문제가 발생할 수 있습니다.
+객관식	패스트 패션(Fast Fashion)의 문제점으로 가장 적절한 것은?	① 제작 기간이 너무 길다 | ② 가격이 너무 비싸다 | ③ 쉽게 사고 쉽게 버려 환경 오염을 가속화한다	3	패스트 패션은 싼 가격에 유행을 빠르게 공급하지만, 의류 폐기물을 급증시켜 환경 문제를 일으킵니다.`;
+  document.getElementById('dataInput').value=d;
+  const el=document.querySelectorAll('.mode-btn')[2];
+  el.classList.add('active');
+  setTimeout(()=>el.classList.remove('active'),600);
+}
+
+function startLearning(){
+  const raw=document.getElementById('dataInput').value.trim();
+  if(!raw)return alert('데이터를 먼저 입력해 주세요!');
+  learningSet=raw.split('\n').map(l=>l.split('\t')).filter(c=>c.length>=2);
+  document.getElementById('setup-view').style.display='none';
+  if(activeMode==='voca') initVoca(); else initQuiz();
+}
+
+/* ─── VOCA ─── */
+function initVoca(){
+  const vocas=learningSet.filter(d=>d[0].includes('카드'));
+  if(!vocas.length)return alert('암기카드 데이터가 없습니다!');
+  learningSet=vocas;
+  const v=document.getElementById('voca-view');
+  v.style.display='block';v.classList.add('anim-in');
+  document.getElementById('vocaTitle').innerText=document.getElementById('mainTitle').value||'단어 암기';
+  showVoca();
+}
+function showVoca(){
+  const q=learningSet[curVocaIdx];
+  document.getElementById('vocaFrontText').innerText=q[1];
+  document.getElementById('vocaBackText').innerText=q[2];
+  document.getElementById('vocaProgress').innerText=`${curVocaIdx+1} / ${learningSet.length}`;
+  document.getElementById('vocaBar').style.width=`${((curVocaIdx+1)/learningSet.length)*100}%`;
+  document.getElementById('vocaTarget').classList.remove('flipped');
+}
+function flipVoca(){document.getElementById('vocaTarget').classList.toggle('flipped')}
+function moveVoca(d){
+  curVocaIdx=Math.max(0,Math.min(learningSet.length-1,curVocaIdx+d));
+  showVoca();
+}
+
+document.addEventListener('keydown',function(e){
+  if(document.getElementById('voca-view').style.display==='none')return;
+  if(e.key==='ArrowLeft')moveVoca(-1);
+  if(e.key==='ArrowRight')moveVoca(1);
+  if(e.key===' '){e.preventDefault();flipVoca();}
+});
+
+/* ─── QUIZ ─── */
+function initQuiz(){
+  const quizzes=learningSet.filter(d=>d[0].includes('객관식'));
+  if(!quizzes.length)return alert('모의고사 데이터가 없습니다!');
+  learningSet=quizzes;
+  const v=document.getElementById('quiz-view');
+  v.style.display='block';v.classList.add('anim-in');
+  document.getElementById('quizTitle').innerText=document.getElementById('mainTitle').value||'모의고사';
+  document.getElementById('quizSub').innerText=`총 ${learningSet.length}문제 · 모든 문제를 풀고 제출하세요`;
+
+  const c=document.getElementById('quizContainer');
+  const markers=['A','B','C','D','E'];
+  c.innerHTML=learningSet.map((q,i)=>`
+    <div class="q-block" id="qi-${i}">
+      <div class="q-num">Q${String(i+1).padStart(2,'0')}</div>
+      <div class="q-text">${q[1]}</div>
+      ${q[2].split('|').map((opt,oi)=>`
+        <button class="q-opt" onclick="sel(${i},${oi+1},this)">
+          <span class="opt-marker">${markers[oi]}</span>
+          <span>${opt.trim()}</span>
+        </button>
+      `).join('')}
+      <div class="q-explain" id="ex-${i}"><b>💡 해설 —</b> ${q[4]||''}</div>
+    </div>
+  `).join('');
+}
+
+let ansMap={};
+function sel(qi,oi,btn){
+  if(document.getElementById('gradeBtn').disabled)return;
+  document.querySelectorAll(`#qi-${qi} .q-opt`).forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  ansMap[qi]=oi.toString();
+}
+
+function processGrading(){
+  let correct=0;
+  learningSet.forEach((q,i)=>{
+    const ans=q[3].trim();
+    const user=ansMap[i];
+    document.querySelectorAll(`#qi-${i} .q-opt`).forEach((b,bi)=>{
+      b.style.cursor='default';
+      if((bi+1).toString()===ans)b.classList.add('correct');
+      else if((bi+1).toString()===user)b.classList.add('wrong');
+    });
+    if(user===ans)correct++;
+    document.getElementById(`ex-${i}`).style.display='block';
+  });
+
+  const pct=Math.round((correct/learningSet.length)*100);
+  const sc=document.getElementById('scoreCard');
+  sc.style.display='block';sc.classList.add('anim-in');
+  document.getElementById('scoreText').innerText=pct+'%';
+
+  const circ=2*Math.PI*50; // r=50
+  setTimeout(()=>{document.getElementById('scoreFill').style.strokeDashoffset=circ-(circ*pct/100)},100);
+
+  let msg='수고했어요!',sub='틀린 문제의 해설을 꼭 확인하세요.';
+  if(pct===100){msg='완벽해요! 🎉';sub='모든 문제를 맞혔어요!';}
+  else if(pct>=80){msg='잘했어요! 👏';sub='거의 다 맞혔어요. 조금만 더!';}
+  else if(pct>=50){msg='괜찮아요!';sub='틀린 부분 복습하면 금방 올라갈 거예요.';}
+  else{msg='힘내요! 💪';sub='해설을 읽고 다시 도전해 보세요.';}
+  document.getElementById('scoreMsg').innerText=msg;
+  document.getElementById('scoreSub').innerText=sub;
+
+  const btn=document.getElementById('gradeBtn');
+  btn.disabled=true;btn.innerText='채점 완료';
+  sc.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+/* ─── Excel Parser (Fixed) ─── */
+function parseExcel(e){
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      const data=new Uint8Array(ev.target.result);
+      const workbook=XLSX.read(data,{type:'array',codepage:65001});
+      const sheet=workbook.Sheets[workbook.SheetNames[0]];
+
+      // Convert to array of arrays, then join each row with tabs
+      const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:false});
+      const tsv=rows
+        .filter(row=>row.some(cell=>cell!==''))           // skip empty rows
+        .map(row=>row.map(cell=>String(cell).trim()).join('\t'))  // join cells with tab
+        .join('\n');
+
+      document.getElementById('dataInput').value=tsv;
+    }catch(err){
+      alert('엑셀 파일을 읽는 중 오류가 발생했습니다.\n파일 형식을 확인해 주세요.');
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+</script>
+</body>
+</html>
